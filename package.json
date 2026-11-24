@@ -1,0 +1,16 @@
+{
+  "name": "airtel-rewards-local",
+  "version": "1.0.0",
+  "description": "Airtel Rewards with Telegram approval — local polling, no ngrok",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "telegraf": "^4.16.3"
+  }
+}
